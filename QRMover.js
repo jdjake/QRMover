@@ -88,11 +88,11 @@ function YourQRCodeConverter() {
 
 
 
-//      Logger.log(emailAddressString);
-//      Logger.log("EMAIL FROM: " + emailAddressString + " WITH SUBJECT: " + subject);
+      // Logger.log(emailAddressString);
+      // Logger.log("EMAIL FROM: " + emailAddressString + " WITH SUBJECT: " + subject);
 
       if (emailAddressString === "jcdenson@wisc.edu") {
-//        Logger.log("CAUGHT YA!");
+          Logger.log("CAUGHT YA!");
 
         // Extract QR Code From Email Message
         var QRCode = GetQRCodeFromEmail(message);
