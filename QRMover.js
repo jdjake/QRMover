@@ -21,13 +21,16 @@ function ParseDate(date) {
 
 
 function GetQRCodeFromEmail(message) {
+  // If message is missing an attachment, there's a problem
   if (!(message.getAttachments())) {
-    Logger.log("We Got A Problem With The Attachments");
+    Logger.log("WE POTENTIALLY HAVE A PROBLEM WITH " + message);
   }
 
   var QRCodeAttachment = message.getAttachments()[0];
   var QRCodeFileName = QRCodeAttachment.getName();
 
+  // Not necessarily a problem if Kanopy sent us
+  // a different format, but could be a problem.
   if (QRCodeFileName !== 'qrcode.png') {
     Logger.log("POTENTIALLY A PROBLEM WITH AN ATTACHMENT CALLED: " + QRCodeFileName);
   }
@@ -36,31 +39,27 @@ function GetQRCodeFromEmail(message) {
 }
 
 function emptyDocument(body) {
-  body.appendParagraph('');// to be sure to delete the last paragraph in case it doesn't end with a cr/lf
+  // Add last paragraph in case there is no CF/LF
+  body.appendParagraph('');
+
+  // Delete each elements from document
   while (body.getNumChildren() > 1) body.removeChild( body.getChild( 0 ) );
 }
 
 function AddQRCodeToGoogleDoc(QRCode, day, numday, month, year) {
-  // TODO: Access ID of Actual QR App
+  // TODO: Access ID of Actual QR Google Doc
   var doc = DocumentApp.openByUrl(
     "https://docs.google.com/document/d/1NB90Neh1GD6CRuzpU38MGM3TeS_8rtklh_sh-edKXFo/edit?usp=sharing"
   );
 
   var body = doc.getBody();
 
-  // Erase Current Content
   emptyDocument(body)
 
   var QRDescription = 'QR Code Updated On ' + day + ' ' + numday + ' / ' + month + ' / ' + year;
-
   Logger.log(QRDescription);
-
   var QRItem = body.appendParagraph(QRDescription + "\n");
   QRItem.appendInlineImage(QRCode);
-
-  // Add QR Code
-  //var text = body.editAsText();
-  //text.insertText(0, "I Worked!");
 }
 
 
@@ -95,11 +94,13 @@ function YourQRCodeConverter() {
       if (emailAddressString === "jcdenson@wisc.edu") {
 //        Logger.log("CAUGHT YA!");
 
-        // Extract QR Code and Move it to Google Doc
+        // Extract QR Code From Email Message
         var QRCode = GetQRCodeFromEmail(message);
 
+        // Move QR Code to Google Doc
         AddQRCodeToGoogleDoc(QRCode, day, numday, month, year);
 
+        // We Only Move The Most Recent Email Fitting Our Criteria To The Google Doc
         return;
       }
     }
