@@ -21,9 +21,11 @@ function ParseDate(date) {
 
 
 function GetQRCodeFromEmail(message) {
+  var log = "";
+
   // If message is missing an attachment, there's a problem
   if (!(message.getAttachments())) {
-    Logger.log("WE POTENTIALLY HAVE A PROBLEM WITH " + message);
+    log += "WE POTENTIALLY HAVE A PROBLEM WITH " + message + "\n";
   }
 
   var QRCodeAttachment = message.getAttachments()[0];
@@ -32,10 +34,10 @@ function GetQRCodeFromEmail(message) {
   // Not necessarily a problem if Kanopy sent us
   // a different format, but could be a problem.
   if (QRCodeFileName !== 'qrcode.png') {
-    Logger.log("POTENTIALLY A PROBLEM WITH AN ATTACHMENT CALLED: " + QRCodeFileName);
+    log += "POTENTIALLY A PROBLEM WITH AN ATTACHMENT CALLED: " + QRCodeFileName + "\n";
   }
 
-  return QRCodeAttachment;
+  return [QRCodeAttachment, log];
 }
 
 function emptyDocument(body) {
@@ -65,11 +67,9 @@ function AddQRCodeToGoogleDoc(QRCode, day, numday, month, year) {
 
 
 function YourQRCodeConverter() {
-  var unreadMessagesCount = GmailApp.getInboxUnreadCount();
+  var threads = GmailApp.getInboxThreads();
 
-  if (unreadMessagesCount > 0) {
-    var threads = GmailApp.getInboxThreads(0, unreadMessagesCount);
-
+  if (threads.length > 0) {
     for (var i = 0; i < threads.length; i++) {
       // The zero in the line below means that you only reply
       // to the first email message in any chain of emails
@@ -91,14 +91,22 @@ function YourQRCodeConverter() {
       // Logger.log(emailAddressString);
       // Logger.log("EMAIL FROM: " + emailAddressString + " WITH SUBJECT: " + subject);
 
-      if (emailAddressString === "jcdenson@wisc.edu") {
+      if (emailAddressString === "jcdenson@wisc.edu") { 
           Logger.log("CAUGHT YA!");
 
         // Extract QR Code From Email Message
-        var QRCode = GetQRCodeFromEmail(message);
+        var [QRCode, log] = GetQRCodeFromEmail(message);
 
         // Move QR Code to Google Doc
         AddQRCodeToGoogleDoc(QRCode, day, numday, month, year);
+
+        // Log Addition of Email
+        GmailApp.sendEmail(
+          "jcdenson@wisc.edu",
+          "QR Code Recieved on " + day + ", " + numday + " " + month + " " + year,
+          log,
+          { attachments: QRCode, name: 'qrcode.png' }
+        );
 
         // We Only Move The Most Recent Email Fitting Our Criteria To The Google Doc
         return;
